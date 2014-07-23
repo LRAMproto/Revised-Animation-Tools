@@ -14,11 +14,15 @@ classdef Frame < hgsetget
         % external function that modifies the behavior of the frame in a
         % predictable way.
         userData = [];
-        % Includes whatever miscellaneous data you need to store for an 
+        % Includes whatever miscellaneous data you need to store for an
         % animation, such as a set of constants, etc.
     end
     
     methods
+        function DisplayUpdate
+            
+        end
+        
     end
     
 end
