@@ -10,7 +10,7 @@ else
     testops = varargin{1};
 end
 
-tests = {@test1,@test2,@test3,@test3_1,@test3_2,@test4,@test5};
+tests = {@test1,@test2,@test3,@test4,@test5,@test6,@test7};
 for i=1:length(testops)
     tests{testops(i)}();
 end
@@ -18,7 +18,9 @@ end
 
 end
 
-function test1
+%% TESTS
+
+function test1()
 % Simple instatiation of base classes.
 fprintf('Test 1: Simple Instantiation of all objects.\n');
 an = Animation();
@@ -27,7 +29,7 @@ fr = Frame();
 disp(fr);
 end
 
-function test2
+function test2()
 % Tests preallocation of frames.
 fprintf('Test 2: Preallocation of frames.\n');
 an = Animation();
@@ -38,48 +40,15 @@ assert(numel(an.frames) == 100)
 % Makes sure that 100 frames are instantiated.
 end
 
-function test3_1()
-fprintf('*** Test 3.1: Preallocation vs Linking');
-
-wb = waitbar(0,'Test3.1: Preallocation of frames...');
-
-NUM_FRAMES = double(int32(rand(1)*10000));
-RAND_FRAME = double(int32(rand(1)*NUM_FRAMES));
-
-fprintf('Rendering %f frames\n',NUM_FRAMES);
-
-linkedListFrameTest(NUM_FRAMES,RAND_FRAME, wb);
-fullAllocFrameTest(NUM_FRAMES, RAND_FRAME, wb);
 
 
-end
-
-function test3_2()
-fprintf('*** Test 3.2: Linking vs Exponential');
-
-wb = waitbar(0,'Test3.2: Preallocation of frames...');
-
-NUM_FRAMES = double(int32(rand(1)*10000));
-RAND_FRAME = double(int32(rand(1)*NUM_FRAMES));
-if RAND_FRAME < 1
-    RAND_FRAME = 1;
-end
-
-fprintf('Rendering %f frames\n',NUM_FRAMES);
-
-linkedListFrameTest(NUM_FRAMES,RAND_FRAME, wb);
-expAllocFrameTest(NUM_FRAMES, RAND_FRAME, wb);
-
-
-end
-
-function test3
+function test3()
 % tests auto-preallocation of frames and times it versus the regular
 % allocation of frames
 fprintf('***** Test 3: Preallocation of frames. *****\n\n');
 
 wb = waitbar(0,'Test3: Preallocation of frames...');
-POWER = 10;
+POWER = 12;
 timeData = zeros(POWER,5);
 
 frameTests = {...
@@ -139,6 +108,144 @@ line(IT_VECT,timeData(:,5),'linestyle','-','linewidth',1,'color','black');
 % Linked List
 end
 
+
+function test4
+% Simple instatiation of base classes.
+fprintf('Test 1: Simple Instantiation of all objects.\n');
+an = Animation();
+fr = an.MakeFrame('Hi');
+disp(an);
+disp(fr);
+end
+
+function test5()
+fprintf('*** Test 5: Linking vs Exponential');
+
+wb = waitbar(0,'Test 5: Preallocation of frames...');
+
+NUM_FRAMES = double(int32(rand(1)*10000));
+RAND_FRAME = double(int31(rand(1)*NUM_FRAMES));
+if RAND_FRAME < 1
+    RAND_FRAME = 1;
+end
+
+fprintf('Rendering %f frames\n',NUM_FRAMES);
+
+tdata = linkedListFrameTest(NUM_FRAMES,RAND_FRAME, wb);
+tdata = expAllocFrameTest(NUM_FRAMES, RAND_FRAME, wb);
+
+
+end
+
+function test6()
+fprintf('*** Test 6: Preallocation vs Linking');
+
+wb = waitbar(0,'Test 6: Preallocation of frames...');
+
+NUM_FRAMES = double(int32(rand(1)*10000));
+RAND_FRAME = double(int32(rand(1)*NUM_FRAMES));
+
+fprintf('Rendering %f frames\n',NUM_FRAMES);
+
+linkedListFrameTest(NUM_FRAMES,RAND_FRAME, wb);
+fullAllocFrameTest(NUM_FRAMES, RAND_FRAME, wb);
+
+
+end
+
+function test7
+% Testing animation on a figure window.
+handles.fig = figure('units','pixels','position',[0 0 500 500]);
+%handles.msg = uicontrol('parent',handles.fig,'style','text','string','testnum','fontsize',45,'position',[0 0 500 100]);
+handles.ax = axes(...
+    'units','pixels',...
+    'xlim',[-2 2],...
+    'ylim',[-2 2],...
+    'xlimmode','manual',...
+    'ylimmode','manual',...
+    'parent',handles.fig,...
+    'position',[25 25 450 450]...
+    );
+% handles.pat.xdata = [-.25 .25 .25 -.25];
+% handles.pat.ydata = [-.25 -.25 .25 .25];
+
+[handles.pat2.xdata,handles.pat2.ydata] = squashed_rectangle_continuous(1,1,1,20);
+
+handles.pat2.visual = patch(...
+    'parent',handles.ax,...
+    'xdata',handles.pat2.xdata,...
+    'ydata',handles.pat2.ydata,...
+    'facecolor','red');
+
+[handles.pat.xdata,handles.pat.ydata] = squashed_rectangle_continuous(.25,.25,1,20);
+
+handles.pat.visual = patch(...
+    'parent',handles.ax,...
+    'xdata',handles.pat.xdata,...
+    'ydata',handles.pat.ydata,...
+    'facecolor','black');
+
+guidata(handles.fig, handles);
+fprintf('*** Test 5: Animation Replay. ***\n\n');
+
+
+wb = waitbar(0,'Test3: Preallocation of frames...');
+
+NUM_FRAMES = double(int32(rand(1)*10000));
+
+fprintf('Rendering %f frames\n',NUM_FRAMES);
+
+% Pre-Allocating All Frames
+
+tic
+an = Animation();
+numFrameStr = sprintf('%d frame PreAlloc',NUM_FRAMES);
+an.name = numFrameStr;
+an.PreAllocateFrames(NUM_FRAMES);
+
+framedata = zeros(1,6);
+height = [0 1.5];
+currentHeight = height;
+acceleration = [0 -0.658];
+v0 = [0.74 0];
+t = 0; 
+mass = 3; % kg
+rho = 3% drag coefficient
+
+loops = 0;
+for  i=1:NUM_FRAMES
+    t = i/60;
+% 
+%     velocity = v0 + acceleration*t;
+%     if currentHeight(2) < 0
+%         if currentHeight(1) < 1.5 && currentHeight(1) > -1.5
+%             currentHeight(2) = height(2);
+%             loops = loops + 1;
+%         else
+%             currentHeight(2) = 0;
+%         end
+%     else
+%         currentHeight = height + velocity*t + acceleration*1/2*(t^2) + height*loops;
+%     end
+%     framedata = [currentHeight(1),currentHeight(2)];
+    
+    [framedata(1),framedata(2)] = pol2cart(degtorad(t*360),.5);
+    
+    an.MakeFrame(framedata);
+    waitbar(i/NUM_FRAMES,wb,sprintf('Rendering Frames\n (%f %%)',i/NUM_FRAMES*100));
+end
+close(wb);
+toc
+disp(an.name);
+
+an.displayFigure = handles.fig;
+an.updateFcn = @UpdateTest;
+an.RunAnimation();
+
+end
+
+%% ALLOCATION TESTS
+
 function tdata = fullAllocFrameTest(NUM_FRAMES, RAND_FRAME, wb)
 tic
 an = Animation();
@@ -163,18 +270,6 @@ rframe = an.GetFrameNo(RAND_FRAME);
 if (rframe.frameNo ~= RAND_FRAME)
     error('inconsistent frame number in full prealloc');
 end
-
-end
-
-function DisplayStats(tdata)
-fprintf('\n');
-fprintf('Name: %s\n',tdata.name);
-fprintf('\tTime: %f Seconds\n',tdata.time);
-fprintf('\tNumber of Frames Rendered: %f\n',tdata.numFrames);
-fprintf('\tNumber of Frames Total: %f\n',tdata.numFramesMax);
-fprintf('\tEfficiency: %f %%\n',tdata.efficiency);
-fprintf('\tFrames/Second: %f \n',tdata.fps);
-fprintf('\tRank: %f \n',tdata.rank);
 
 end
 
@@ -289,52 +384,26 @@ if rframe.frameNo ~= RAND_FRAME
 end
 end
 
-function test4
-% Simple instatiation of base classes.
-fprintf('Test 1: Simple Instantiation of all objects.\n');
-an = Animation();
-fr = an.MakeFrame('Hi');
-disp(an);
-disp(fr);
-end
+%Test 3 Display Function
 
-function test5
-% Testing animation on a figure window.
-handles.fig = figure;
-handles.msg = uicontrol('parent',handles.fig,'style','text','string','testnum','fontsize',45,'position',[0 0 500 100]);
-guidata(handles.fig, handles);
-
-fprintf('*** Test 5: Animation Replay. ***\n\n');
-
-wb = waitbar(0,'Test3: Preallocation of frames...');
-
-NUM_FRAMES = double(int32(rand(1)*10000));
-
-fprintf('Rendering %f frames\n',NUM_FRAMES);
-
-% Pre-Allocating All Frames
-
-tic
-an = Animation();
-numFrameStr = sprintf('%d frame PreAlloc',NUM_FRAMES);
-an.name = numFrameStr;
-an.PreAllocateFrames(NUM_FRAMES);
-for  i=1:NUM_FRAMES
-    an.MakeFrame(i);
-    waitbar(i/NUM_FRAMES,wb,sprintf('Rendering Frames\n (%f %%)',i/NUM_FRAMES*100));
-end
-close(wb);
-toc
-disp(an.name);
-
-an.displayFigure = handles.fig;
-an.updateFcn = @UpdateTest;
-an.RunAnimation();
+function DisplayStats(tdata)
+fprintf('\n');
+fprintf('Name: %s\n',tdata.name);
+fprintf('\tTime: %f Seconds\n',tdata.time);
+fprintf('\tNumber of Frames Rendered: %f\n',tdata.numFrames);
+fprintf('\tNumber of Frames Total: %f\n',tdata.numFramesMax);
+fprintf('\tEfficiency: %f %%\n',tdata.efficiency);
+fprintf('\tFrames/Second: %f \n',tdata.fps);
+fprintf('\tRank: %f \n',tdata.rank);
 
 end
 
+% Test 7 Update Function
 function UpdateTest(animation, frame)
 fig = animation.displayFigure;
 handles = guidata(fig);
-set(handles.msg,'String',frame.frameData(1));
+set(handles.pat.visual,...
+    'xdata',handles.pat.xdata+frame.frameData(1),...
+    'ydata',handles.pat.ydata+frame.frameData(2));
+    
 end
