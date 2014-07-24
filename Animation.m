@@ -18,7 +18,7 @@ classdef Animation < hgsetget
         
         displayFigure = [];
         % figure that displays the animation
-
+        
         firstFrame = [];
         
         frames = []
@@ -34,7 +34,7 @@ classdef Animation < hgsetget
         imgExportFormat = {};
         % format that can be used to export videos.
         % opts = {'avi','mpeg'};
-
+        
         lastFrame = [];
         % last frame in the animation
         
@@ -46,6 +46,8 @@ classdef Animation < hgsetget
         
         numFramesMax = 0;
         % maximum number of frames.
+        
+        saveDirectory = pwd;
         
         updateFcn = [];
         % function which updates the frame.
@@ -87,9 +89,9 @@ classdef Animation < hgsetget
             newFrame = Frame();
             set(newFrame,...
                 'frameNo',obj.currentFrameNo,...
-                'frameData',framedata);                
+                'frameData',framedata);
             if isempty(obj.firstFrame)
-                obj.firstFrame = newFrame;                
+                obj.firstFrame = newFrame;
                 obj.lastFrame = obj.firstFrame;
             else
                 obj.lastFrame.nextFrame = newFrame;
@@ -98,19 +100,19 @@ classdef Animation < hgsetget
             end
             
             frame = newFrame;
-                
-        end        
+            
+        end
         
         function MakeFrameContainer(obj)
             obj.PreAllocateFrames(obj.numFrames);
             curFrame = obj.firstFrame;
             count = 0;
             while ~isempty(curFrame)
-                count = count + 1;                
-                obj.frames(count) = curFrame;                
+                count = count + 1;
+                obj.frames(count) = curFrame;
                 curFrame = curFrame.nextFrame;
             end
-        end        
+        end
         
         function frame = MakeFrame(obj,framedata)
             % Makes a frame.
@@ -123,9 +125,9 @@ classdef Animation < hgsetget
                     case 'exponential'
                         obj.autoPreallocateSize = ...
                             obj.autoPreallocateSize * ...
-                            obj.autoPreallocateExponent;                        
+                            obj.autoPreallocateExponent;
                         obj.PreAllocateFrames(obj.autoPreallocateSize-obj.numFramesMax);
-
+                        
                 end
                 
             end
@@ -147,17 +149,36 @@ classdef Animation < hgsetget
             end
         end
         
-        function RenderFrame(obj)
+        function RenderFrame(obj, directory)
             % renders the next frame.
-            obj.renderFrameNo(obj.currentFrameNo+1);
+            obj.renderFrameNo(obj.currentFrameNo+1, directory);
         end
         
-        function RenderFrameNo(obj,idx)
+        function RenderFrameNo(obj,idx, directory)
             % Renders a frame based on index.
-            if numel(obj.frames) > idx
+            savedir = fullfile(directory,'frames');
+            if ~exist(savedir)
+                mkdir(savedir);
+            end
+            tempSVGFilename = fullfile(savedir,'temp.svg');
+            
+            if numel(obj.frames) < idx
+                disp(numel(obj.frames));
                 error('The frame at this position does not exist.');
             end
-            
+            obj.updateFcn(obj,obj.frames(idx));
+            plot2svg(tempSVGFilename,obj.displayFigure);
+            framename = sprintf('frameno%d.jpg',obj.frames(idx).frameNo);
+            frameOutputName = fullfile(savedir,framename);
+            svg2jpg(tempSVGFilename,frameOutputName);
+            obj.frames(idx).outputFile = frameOutputName;
+        end
+        
+        function RenderAllFramesTo(obj,directory)
+            for i=1:obj.numFrames
+                
+                obj.RenderFrameNo(i, directory);
+            end
         end
         
         function RunAnimation(obj)
@@ -167,8 +188,29 @@ classdef Animation < hgsetget
             end
         end
         
+        function MakeVideoFile(obj, directory)
+            for i=1:obj.numFrames
+                if isempty(obj.frames(i).outputFile);
+                    error('Frame %d has not been rendered. You must render all frames first.',obj.frames(i).frameNo);
+                end
+            end
+            filepath = fullfile(directory,strcat(obj.name,'.avi'));
+            vidObj = VideoWriter(filepath);
+            set(vidObj,'FrameRate',obj.frameRate);
+            open(vidObj);
+            
+            for i = 1:obj.numFrames
+                
+                for k = 1:length(obj.frames)
+                    tempFrame = obj.frames(k).outputFile;
+                    curFrame = imread(tempFrame);
+                    writeVideo(vidObj,curFrame);
+                end
+            end
+            close(vidObj);
+            
+        end
         
     end
-    
 end
 

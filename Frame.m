@@ -22,6 +22,8 @@ classdef Frame < hgsetget
         userData = [];
         % Includes whatever miscellaneous data you need to store for an
         % animation, such as a set of constants, etc.
+        
+        outputFile = [];
     end
     
     methods
