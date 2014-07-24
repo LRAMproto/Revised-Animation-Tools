@@ -8,8 +8,14 @@ classdef Frame < hgsetget
         % has been uninstantiated.
         frameData = [];
         % data that encompasses all changing data variables.
+        
+        nextFrame = [];
+        
         parentAnimation
         % animation the frame belongs to
+
+        previousFrame = [];
+        
         updateFcn = [];
         % external function that modifies the behavior of the frame in a
         % predictable way.
