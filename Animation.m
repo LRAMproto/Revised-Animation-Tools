@@ -11,11 +11,15 @@ classdef Animation < hgsetget
         
         autoPreallocateSize = 1;
         
-        currentFrame = 0;
+        currentFrame = [];
+        
+        currentFrameNo = 0;
         % index of current frame used for rendering purposes.
         
         displayFigure = [];
         % figure that displays the animation
+
+        firstFrame = [];
         
         frames = []
         % a list of animation frames used to render everything.
@@ -30,6 +34,9 @@ classdef Animation < hgsetget
         imgExportFormat = {};
         % format that can be used to export videos.
         % opts = {'avi','mpeg'};
+
+        lastFrame = [];
+        % last frame in the animation
         
         name = [];
         % name of output files for animation.
@@ -73,6 +80,38 @@ classdef Animation < hgsetget
             obj.numFramesMax = obj.numFramesMax + num;
         end
         
+        function frame = MakeLinkedFrame(obj,framedata)
+            obj.currentFrameNo = obj.currentFrameNo+1;
+            obj.numFrames = obj.numFrames+1;
+            
+            newFrame = Frame();
+            set(newFrame,...
+                'frameNo',obj.currentFrameNo,...
+                'frameData',framedata);                
+            if isempty(obj.firstFrame)
+                obj.firstFrame = newFrame;                
+                obj.lastFrame = obj.firstFrame;
+            else
+                obj.lastFrame.nextFrame = newFrame;
+                newFrame.previousFrame = obj.lastFrame;
+                obj.lastFrame = newFrame;
+            end
+            
+            frame = newFrame;
+                
+        end        
+        
+        function MakeFrameContainer(obj)
+            obj.PreAllocateFrames(obj.numFrames);
+            curFrame = obj.firstFrame;
+            count = 0;
+            while ~isempty(curFrame)
+                count = count + 1;                
+                obj.frames(count) = curFrame;                
+                curFrame = curFrame.nextFrame;
+            end
+        end        
+        
         function frame = MakeFrame(obj,framedata)
             % Makes a frame.
             if obj.numFrames >= obj.numFramesMax
@@ -82,20 +121,21 @@ classdef Animation < hgsetget
                     case 'none'
                         obj.PreAllocateFrames(1);
                     case 'exponential'
-                        obj.PreAllocateFrames(obj.autoPreallocateSize);
                         obj.autoPreallocateSize = ...
                             obj.autoPreallocateSize * ...
-                            obj.autoPreallocateExponent;
+                            obj.autoPreallocateExponent;                        
+                        obj.PreAllocateFrames(obj.autoPreallocateSize-obj.numFramesMax);
+
                 end
                 
             end
             obj.numFrames = obj.numFrames + 1;
-            obj.currentFrame = obj.currentFrame+1;
+            obj.currentFrameNo = obj.currentFrameNo+1;
             newFrame = Frame();
             set(newFrame,...
-                'frameNo',obj.currentFrame,...
+                'frameNo',obj.currentFrameNo,...
                 'frameData',framedata);
-            obj.frames(obj.currentFrame) = newFrame;
+            obj.frames(obj.currentFrameNo) = newFrame;
             frame = newFrame;
         end
         
@@ -109,7 +149,7 @@ classdef Animation < hgsetget
         
         function RenderFrame(obj)
             % renders the next frame.
-            obj.renderFrameNo(obj.currentFrame+1);
+            obj.renderFrameNo(obj.currentFrameNo+1);
         end
         
         function RenderFrameNo(obj,idx)
