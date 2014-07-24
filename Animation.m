@@ -13,7 +13,7 @@ classdef Animation < hgsetget
         
         currentFrame = [];
         
-        currentFrameNo = 0;
+        currentFrameNo = -1;
         % index of current frame used for rendering purposes.
         
         displayFigure = [];
@@ -137,7 +137,7 @@ classdef Animation < hgsetget
             set(newFrame,...
                 'frameNo',obj.currentFrameNo,...
                 'frameData',framedata);
-            obj.frames(obj.currentFrameNo) = newFrame;
+            obj.frames(obj.currentFrameNo+1) = newFrame;
             frame = newFrame;
         end
         
