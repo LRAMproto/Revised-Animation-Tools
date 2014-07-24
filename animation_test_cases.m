@@ -260,7 +260,7 @@ fprintf('*** Test 5: Animation Replay. ***\n\n');
 
 wb = waitbar(0,'Test3: Preallocation of frames...');
 
-NUM_FRAMES = 360;
+NUM_FRAMES = 60;
 
 fprintf('Rendering %f frames\n',NUM_FRAMES);
 
@@ -276,8 +276,8 @@ framedata = zeros(1,6);
 
 for  i=1:NUM_FRAMES
     t = i/60;
-
-    [framedata(1),framedata(2)] = pol2cart(degtorad(t*360),.5);
+    r = sin(t)*1.5;
+    [framedata(1),framedata(2)] = pol2cart(degtorad(t*360),r);
     
     an.MakeFrame(framedata);
     waitbar(i/NUM_FRAMES,wb,sprintf('Rendering Frames\n (%f %%)',i/NUM_FRAMES*100));
@@ -288,8 +288,10 @@ disp(an.name);
 
 an.displayFigure = handles.fig;
 an.updateFcn = @UpdateTest;
-an.RunAnimation();
-
+fprintf('Rendering frames to %s...\n',pwd);
+an.RenderAllFramesTo(pwd);
+fprintf('Rendering frames to %s...\n',pwd);
+an.MakeVideoFile(pwd);
 end
 
 
