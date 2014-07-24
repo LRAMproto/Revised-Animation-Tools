@@ -290,8 +290,8 @@ an.displayFigure = handles.fig;
 an.updateFcn = @UpdateTest;
 fprintf('Rendering frames to %s...\n',pwd);
 an.RenderAllFramesTo(pwd);
-fprintf('Rendering frames to %s...\n',pwd);
-an.MakeVideoFile(pwd);
+%fprintf('Rendering frames to %s...\n',pwd);
+%an.MakeVideoFile(pwd);
 end
 
 
