@@ -10,7 +10,7 @@ else
     testops = varargin{1};
 end
 
-tests = {@test1,@test2,@test3,@test4,@test5,@test6,@test7};
+tests = {@test1,@test2,@test3,@test4,@test5,@test6,@test7,@test8};
 for i=1:length(testops)
     tests{testops(i)}();
 end
@@ -166,10 +166,11 @@ handles.ax = axes(...
     'parent',handles.fig,...
     'position',[25 25 450 450]...
     );
-% handles.pat.xdata = [-.25 .25 .25 -.25];
-% handles.pat.ydata = [-.25 -.25 .25 .25];
+handles.pat.xdata = [-.25 .25 .25 -.25];
+handles.pat.ydata = [-.25 -.25 .25 .25];
 
-[handles.pat2.xdata,handles.pat2.ydata] = squashed_rectangle_continuous(1,1,1,20);
+handles.pat2.xdata = [-.5 .5 .5 -.5];
+handles.pat2.ydata = [-.5 -.5 .5 .5];
 
 handles.pat2.visual = patch(...
     'parent',handles.ax,...
@@ -177,13 +178,11 @@ handles.pat2.visual = patch(...
     'ydata',handles.pat2.ydata,...
     'facecolor','red');
 
-[handles.pat.xdata,handles.pat.ydata] = squashed_rectangle_continuous(.25,.25,1,20);
-
 handles.pat.visual = patch(...
     'parent',handles.ax,...
     'xdata',handles.pat.xdata,...
     'ydata',handles.pat.ydata,...
-    'facecolor','black');
+    'facecolor',[.2 .4 .6]);
 
 guidata(handles.fig, handles);
 fprintf('*** Test 5: Animation Replay. ***\n\n');
@@ -204,31 +203,10 @@ an.name = numFrameStr;
 an.PreAllocateFrames(NUM_FRAMES);
 
 framedata = zeros(1,6);
-height = [0 1.5];
-currentHeight = height;
-acceleration = [0 -0.658];
-v0 = [0.74 0];
-t = 0; 
-mass = 3; % kg
-rho = 3% drag coefficient
 
-loops = 0;
 for  i=1:NUM_FRAMES
     t = i/60;
-% 
-%     velocity = v0 + acceleration*t;
-%     if currentHeight(2) < 0
-%         if currentHeight(1) < 1.5 && currentHeight(1) > -1.5
-%             currentHeight(2) = height(2);
-%             loops = loops + 1;
-%         else
-%             currentHeight(2) = 0;
-%         end
-%     else
-%         currentHeight = height + velocity*t + acceleration*1/2*(t^2) + height*loops;
-%     end
-%     framedata = [currentHeight(1),currentHeight(2)];
-    
+
     [framedata(1),framedata(2)] = pol2cart(degtorad(t*360),.5);
     
     an.MakeFrame(framedata);
@@ -243,6 +221,77 @@ an.updateFcn = @UpdateTest;
 an.RunAnimation();
 
 end
+
+function test8()
+
+% Testing animation on a figure window.
+handles.fig = figure('units','pixels','position',[0 0 500 500]);
+%handles.msg = uicontrol('parent',handles.fig,'style','text','string','testnum','fontsize',45,'position',[0 0 500 100]);
+handles.ax = axes(...
+    'units','pixels',...
+    'xlim',[-2 2],...
+    'ylim',[-2 2],...
+    'xlimmode','manual',...
+    'ylimmode','manual',...
+    'parent',handles.fig,...
+    'position',[25 25 450 450]...
+    );
+handles.pat.xdata = [-.25 .25 .25 -.25];
+handles.pat.ydata = [-.25 -.25 .25 .25];
+
+handles.pat2.xdata = [-.5 .5 .5 -.5];
+handles.pat2.ydata = [-.5 -.5 .5 .5];
+
+handles.pat2.visual = patch(...
+    'parent',handles.ax,...
+    'xdata',handles.pat2.xdata,...
+    'ydata',handles.pat2.ydata,...
+    'facecolor','red');
+
+handles.pat.visual = patch(...
+    'parent',handles.ax,...
+    'xdata',handles.pat.xdata,...
+    'ydata',handles.pat.ydata,...
+    'facecolor',[.2 .4 .6]);
+
+guidata(handles.fig, handles);
+fprintf('*** Test 5: Animation Replay. ***\n\n');
+
+
+wb = waitbar(0,'Test3: Preallocation of frames...');
+
+NUM_FRAMES = 360;
+
+fprintf('Rendering %f frames\n',NUM_FRAMES);
+
+% Pre-Allocating All Frames
+
+tic
+an = Animation();
+numFrameStr = sprintf('%d frame PreAlloc',NUM_FRAMES);
+an.name = numFrameStr;
+an.PreAllocateFrames(NUM_FRAMES);
+
+framedata = zeros(1,6);
+
+for  i=1:NUM_FRAMES
+    t = i/60;
+
+    [framedata(1),framedata(2)] = pol2cart(degtorad(t*360),.5);
+    
+    an.MakeFrame(framedata);
+    waitbar(i/NUM_FRAMES,wb,sprintf('Rendering Frames\n (%f %%)',i/NUM_FRAMES*100));
+end
+close(wb);
+toc
+disp(an.name);
+
+an.displayFigure = handles.fig;
+an.updateFcn = @UpdateTest;
+an.RunAnimation();
+
+end
+
 
 %% ALLOCATION TESTS
 
