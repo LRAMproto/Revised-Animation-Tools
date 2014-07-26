@@ -31,6 +31,8 @@ classdef Animation < hgsetget
         % function that accepts a figure and uses an animation's framedata
         % to render the function.
         
+        frameWidth = 1024;
+        
         imgExportFormat = {};
         % format that can be used to export videos.
         % opts = {'avi','mpeg'};
@@ -175,10 +177,42 @@ classdef Animation < hgsetget
         end
         
         function RenderAllFramesTo(obj,directory)
+            tic;
             for i=1:obj.numFrames
                 
                 obj.RenderFrameNo(i, directory);
             end
+            toc;
+        end
+        
+        function RenderAllFramesToo(obj, directory)
+            tic;
+            import SVGRendering.SVGRenderer.*;
+            
+            renderer = SVGRenderer();
+            renderer.SetOutputFormat('PNG');
+            renderer.SetWidth(obj.frameWidth);
+            
+            savedir = fullfile(directory,'frames');
+            if ~exist(savedir)
+                mkdir(savedir);
+            end
+            
+            tempSVGFilename = fullfile(savedir,'temp.svg');
+            
+            for idx=1:obj.numFrames
+                if numel(obj.frames) < idx
+                    disp(numel(obj.frames));
+                    error('The frame at this position does not exist.');
+                end
+                obj.updateFcn(obj,obj.frames(idx));
+                plot2svg(tempSVGFilename,obj.displayFigure);
+                framename = sprintf('frameno%d.png',obj.frames(idx).frameNo);
+                frameOutputName = fullfile(savedir,framename);
+                renderer.RenderImage(tempSVGFilename,frameOutputName);
+                obj.frames(idx).outputFile = frameOutputName;
+            end
+            toc;
         end
         
         function RunAnimation(obj)

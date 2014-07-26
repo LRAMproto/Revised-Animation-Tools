@@ -260,7 +260,7 @@ fprintf('*** Test 5: Animation Replay. ***\n\n');
 
 wb = waitbar(0,'Test3: Preallocation of frames...');
 
-NUM_FRAMES = 60;
+NUM_FRAMES = 720;
 
 fprintf('Rendering %f frames\n',NUM_FRAMES);
 
@@ -289,6 +289,8 @@ disp(an.name);
 an.displayFigure = handles.fig;
 an.updateFcn = @UpdateTest;
 fprintf('Rendering frames to %s...\n',pwd);
+an.frameWidth = 200;
+an.RenderAllFramesToo(pwd);
 an.RenderAllFramesTo(pwd);
 %fprintf('Rendering frames to %s...\n',pwd);
 %an.MakeVideoFile(pwd);
