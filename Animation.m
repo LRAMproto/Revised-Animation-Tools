@@ -8,6 +8,8 @@ classdef Animation < hgsetget
         % opts = {'none','exponential','linear'};
         
         autoPreallocateExponent = 2;
+        % if set to 'exponential', each iteration will multiply the number
+        % of existing frames by 2.
         
         autoPreallocateSize = 1;
         
@@ -18,6 +20,9 @@ classdef Animation < hgsetget
         
         displayFigure = [];
         % figure that displays the animation
+        
+        debugMode = 0;
+        % debug mode for displaying output.
         
         firstFrame = [];
         
@@ -69,8 +74,43 @@ classdef Animation < hgsetget
             if ismember(val,opts)
                 obj.autoPreallocateMode = val;
             else
-                error('This is not a valid option.');
+                error('%s is not a valid option.',val);
             end
+            
+        end
+        
+        function obj = set.autoPreallocateSize(obj,val)
+            if val <= 0
+                error('Cannot set preallocation size <= 0\n');
+            else
+                obj.autoPreallocateSize = val;
+            end
+        end
+        
+        function disp(obj)
+            % Overrides the Disp() function
+            fprintf('Animation Class\n');
+            fprintf('\t Name: %s\n', ...
+                obj.name);
+            fprintf('\t Saves To: %s\n',obj.saveDirectory)
+            fprintf('\t Number of Frames Used: %d\n', ...
+                obj.numFrames);
+            fprintf('\t Number of Frames Allocated: %d\n',...
+                obj.numFramesMax);
+            fprintf('\t Allocation Mode: %s ',obj.autoPreallocateMode);
+            switch(obj.autoPreallocateMode)
+                case 'none'
+                case 'exponential'
+                    fprintf('multiplying by %.2f per allocation.',...
+                        obj.autoPreallocateExponent);
+                case 'linear'
+                    fprintf('adding %f frames per allocation.',...
+                        obj.autoPreallocateSize);
+            end
+            fprintf('\n');
+            fprintf('\t Percentage of frames used: %.2f%%\n',...
+                obj.numFrames/obj.numFramesMax*100);
+            fprintf('\t Framerate: %d FPS\n',obj.frameRate);
             
         end
         
@@ -79,6 +119,9 @@ classdef Animation < hgsetget
             % Pre-allocates a given number of frames to speed up addition
             % of frames when the size of the animation is known.
             % this does not erase old frames.
+            if obj.debugMode >= 1
+                fprintf('Allocating %d new frames to %s.\n',num,obj.name);
+            end
             newFrames = repmat(Frame(),1,num);
             obj.frames = [obj.frames, newFrames];
             obj.numFramesMax = obj.numFramesMax + num;
@@ -139,7 +182,13 @@ classdef Animation < hgsetget
             set(newFrame,...
                 'frameNo',obj.currentFrameNo,...
                 'frameData',framedata);
+            if obj.numFrames == 1
+                obj.firstFrame = newFrame;
+            end
             obj.frames(obj.currentFrameNo+1) = newFrame;
+            obj.currentFrame.nextFrame = newFrame;
+            newFrame.previousFrame = obj.currentFrame;
+            obj.currentFrame = newFrame;
             frame = newFrame;
         end
         
@@ -175,25 +224,26 @@ classdef Animation < hgsetget
             svg2jpg(tempSVGFilename,frameOutputName);
             obj.frames(idx).outputFile = frameOutputName;
         end
-        
-        function RenderAllFramesTo(obj,directory)
-            tic;
+        % Deprecated method of frame rendering.
+        function RenderAllFramesToo(obj,directory)
             for i=1:obj.numFrames
                 
                 obj.RenderFrameNo(i, directory);
             end
-            toc;
         end
         
-        function RenderAllFramesToo(obj, directory)
-            tic;
+        function RenderAllFramesTo(obj, directory)
+            if exist('SVGRenderer','class') == 0
+                % Adds the file path of the directory of this file.
+                javaaddpath(fullfile(fileparts(mfilename('fullpath')),'SVGRendering'));
+            end
             import SVGRendering.SVGRenderer.*;
             
             renderer = SVGRenderer();
             renderer.SetOutputFormat('PNG');
             renderer.SetWidth(obj.frameWidth);
             
-            savedir = fullfile(directory,'frames');
+            savedir = fullfile(directory,obj.name,'frames');
             if ~exist(savedir)
                 mkdir(savedir);
             end
@@ -212,14 +262,45 @@ classdef Animation < hgsetget
                 renderer.RenderImage(tempSVGFilename,frameOutputName);
                 obj.frames(idx).outputFile = frameOutputName;
             end
-            toc;
         end
         
+        
         function RunAnimation(obj)
-            for i=1:obj.numFrames
-                pause(1/obj.frameRate);
-                obj.updateFcn(obj,obj.frames(i));
+            pauseTime = 1/obj.frameRate;
+            updateTime = 0;
+            % Iteration: based update
+%             for i=1:obj.numFrames
+%               
+%                 tstart = tic;
+%                 obj.updateFcn(obj,obj.frames(i));
+%                 updateTime = toc(tstart);
+% 
+%                 if(pauseTime-updateTime)>0
+%                     pause(pauseTime-updateTime);
+%                 end
+%                 
+%                 % If this condition isn't satisfied, then there is no
+%                 % pausing.
+%             end
+            
+            curFrame = obj.firstFrame;
+            
+            while ~isempty(curFrame)              
+              
+                tstart = tic;
+                obj.updateFcn(obj,curFrame);
+                updateTime = toc(tstart);
+
+                if(pauseTime-updateTime)>0
+                    % checks to see if the frames are being rendered
+                    % quickly enough.
+                    pause(pauseTime-updateTime);
+                end
+                curFrame = curFrame.nextFrame;
+                % If this condition isn't satisfied, then there is no
+                % pausing.
             end
+
         end
         
         function MakeVideoFile(obj, directory)
