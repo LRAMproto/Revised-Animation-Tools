@@ -26,12 +26,5 @@ classdef Frame < hgsetget
         outputFile = [];
     end
     
-    methods
-        function DisplayUpdate
-            
-        end
-        
-    end
-    
 end
 
