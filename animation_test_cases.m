@@ -11,6 +11,7 @@ else
 end
 
 tests = {@test1,@test2,@test3,@test4,@test5,@test6,@test7,@test8};
+
 for i=1:length(testops)
     tests{testops(i)}();
 end
@@ -260,7 +261,7 @@ fprintf('*** Test 5: Animation Replay. ***\n\n');
 
 wb = waitbar(0,'Test3: Preallocation of frames...');
 
-NUM_FRAMES = 720;
+NUM_FRAMES = 120;
 
 fprintf('Rendering %f frames\n',NUM_FRAMES);
 
@@ -268,7 +269,7 @@ fprintf('Rendering %f frames\n',NUM_FRAMES);
 
 tic
 an = Animation();
-numFrameStr = sprintf('%d frame PreAlloc',NUM_FRAMES);
+numFrameStr = sprintf('Animation 8 Test');
 an.name = numFrameStr;
 an.PreAllocateFrames(NUM_FRAMES);
 
@@ -289,8 +290,8 @@ disp(an.name);
 an.displayFigure = handles.fig;
 an.updateFcn = @UpdateTest;
 fprintf('Rendering frames to %s...\n',pwd);
-an.frameWidth = 200;
-an.RenderAllFramesToo(pwd);
+an.frameWidth = 500;
+% an.RenderAllFramesToo(pwd);
 an.RenderAllFramesTo(pwd);
 %fprintf('Rendering frames to %s...\n',pwd);
 %an.MakeVideoFile(pwd);
