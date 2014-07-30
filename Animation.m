@@ -12,60 +12,82 @@ classdef Animation < hgsetget
         % of existing frames by 2.
         
         autoPreallocateSize = 1;
+        % If you set autoPreallocateMode to 'linear', then you every time
+        % the container for frames has to update its size, it will expand
+        % by this many entries.
         
         currentFrame = [];
+        % The actual frame object in the current frame.
         
-        currentFrameNo = -1;
+        currentFrameNo = 0;
         % index of current frame used for rendering purposes.
         
         displayFigure = [];
-        % figure that displays the animation
+        % figure that displays the animation.
         
         debugMode = 0;
         % debug mode for displaying output.
         
         firstFrame = [];
+        % Frame object of first frame in the animation.
         
         frames = []
-        % a list of animation frames used to render everything.
-        % this list must support quick, in-order insertion.
+        % a list of all animation frames used to render the animation. Note
+        % that the frames are not actually files; they are more like
+        % structures used to record information about the animation. They
+        % can be used to play back an animation before exporting it.
         
-        frameRate = 60;
+        frameRate = 15; % FPS.
+        % Rate at which the animation plays back. You can set higher
+        % framerates - 60 FPS would probably be the most visually
+        % appealing, though anything above 120 would probably be difficult
+        % to play back in MATLAB and would this be render-only.       
         
         frameUpdateFcn = [];
-        % function that accepts a figure and uses an animation's framedata
-        % to render the function.
+        % function used for updating a figure. This is made outside of the
+        % Animation class.
+        % Example:
+        %   function FigureUpdateFcn(animation, frame)
+        %   fig = animation.displayFigure;
+        %   framedata = get(frame, 'frameData');
+        %   ...
         
         frameWidth = 1024;
+        % Width of rendered frame.
         
-        imgExportFormat = {};
+        % TODO: Add frameHeight and frameHeight handling.
+        
+        imgExportFormat = 'PNG';
         % format that can be used to export videos.
-        % opts = {'avi','mpeg'};
+        % opts = {'png','jpeg','tiff};
         
         lastFrame = [];
-        % last frame in the animation
+        % Last frame in the animation.
         
         name = [];
-        % name of output files for animation.
+        % Name of animation project. By default, the animation folder will
+        % render all files to this folder.
         
         numFrames = 0;
         % number of currently used frames.
         
         numFramesMax = 0;
-        % maximum number of frames.
+        % Number of Allocated frames.
         
         saveDirectory = pwd;
+        % Directory in which the animation is saved in.
         
-        updateFcn = [];
-        % function which updates the frame.
-        
-        videoExportFormat = {'avi'};
+        videoExportFormat = 'avi';
         % file type of video to export.
         % opts = {'avi','mpeg'};
         
     end
     
     methods
+        
+        function obj = Animation()
+            animation_setup();
+        end
         
         % hg set get operations
         function obj = set.autoPreallocateMode(obj,val)
@@ -185,9 +207,10 @@ classdef Animation < hgsetget
             if obj.numFrames == 1
                 obj.firstFrame = newFrame;
             end
-            obj.frames(obj.currentFrameNo+1) = newFrame;
+            obj.frames(obj.currentFrameNo) = newFrame;
             obj.currentFrame.nextFrame = newFrame;
             newFrame.previousFrame = obj.currentFrame;
+            obj.lastFrame = newFrame;
             obj.currentFrame = newFrame;
             frame = newFrame;
         end
@@ -217,7 +240,7 @@ classdef Animation < hgsetget
                 disp(numel(obj.frames));
                 error('The frame at this position does not exist.');
             end
-            obj.updateFcn(obj,obj.frames(idx));
+            obj.frameUpdateFcn(obj,obj.frames(idx));
             plot2svg(tempSVGFilename,obj.displayFigure);
             framename = sprintf('frameno%d.jpg',obj.frames(idx).frameNo);
             frameOutputName = fullfile(savedir,framename);
@@ -233,14 +256,14 @@ classdef Animation < hgsetget
         end
         
         function RenderAllFramesTo(obj, directory)
-            if exist('SVGRenderer','class') == 0
-                % Adds the file path of the directory of this file.
-                javaaddpath(fullfile(fileparts(mfilename('fullpath')),'SVGRendering'));
+            
+            if exist('SVGRenderer','class') == 0                
+                animation_setup();
             end
             import SVGRendering.SVGRenderer.*;
             
             renderer = SVGRenderer();
-            renderer.SetOutputFormat('PNG');
+            renderer.SetOutputFormat(obj.imgExportFormat);
             renderer.SetWidth(obj.frameWidth);
             
             savedir = fullfile(directory,obj.name,'frames');
@@ -255,7 +278,7 @@ classdef Animation < hgsetget
                     disp(numel(obj.frames));
                     error('The frame at this position does not exist.');
                 end
-                obj.updateFcn(obj,obj.frames(idx));
+                obj.frameUpdateFcn(obj,obj.frames(idx));
                 plot2svg(tempSVGFilename,obj.displayFigure);
                 framename = sprintf('frameno%d.png',obj.frames(idx).frameNo);
                 frameOutputName = fullfile(savedir,framename);
@@ -272,7 +295,7 @@ classdef Animation < hgsetget
 %             for i=1:obj.numFrames
 %               
 %                 tstart = tic;
-%                 obj.updateFcn(obj,obj.frames(i));
+%                 obj.frameUpdateFcn(obj,obj.frames(i));
 %                 updateTime = toc(tstart);
 % 
 %                 if(pauseTime-updateTime)>0
@@ -288,7 +311,7 @@ classdef Animation < hgsetget
             while ~isempty(curFrame)              
               
                 tstart = tic;
-                obj.updateFcn(obj,curFrame);
+                obj.frameUpdateFcn(obj,curFrame);
                 updateTime = toc(tstart);
 
                 if(pauseTime-updateTime)>0

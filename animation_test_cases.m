@@ -64,7 +64,7 @@ IT_VECT = 2.^(1:POWER);
 itCount = 1;
 for k=IT_VECT
     NUM_FRAMES = k;
-    RAND_FRAME = double(int32(rand(1)*NUM_FRAMES));
+    RAND_FRAME = double(int32(rand(1)*(NUM_FRAMES-1))+1);
     
     fprintf('*** Rendering %f frames. ***\n',NUM_FRAMES);
     
@@ -112,7 +112,7 @@ end
 
 function test4
 % Simple instatiation of base classes.
-fprintf('Test 1: Simple Instantiation of all objects.\n');
+fprintf('Test 4: Test of MakeFrame.\n');
 an = Animation();
 fr = an.MakeFrame('Hi');
 disp(an);
@@ -125,7 +125,7 @@ fprintf('*** Test 5: Linking vs Exponential');
 wb = waitbar(0,'Test 5: Preallocation of frames...');
 
 NUM_FRAMES = double(int32(rand(1)*10000));
-RAND_FRAME = double(int31(rand(1)*NUM_FRAMES));
+RAND_FRAME = double(int32(rand(1)*(NUM_FRAMES-1))+1);
 if RAND_FRAME < 1
     RAND_FRAME = 1;
 end
@@ -218,7 +218,7 @@ toc
 disp(an.name);
 
 an.displayFigure = handles.fig;
-an.updateFcn = @UpdateTest;
+an.frameUpdateFcn = @UpdateTest;
 an.RunAnimation();
 
 end
@@ -288,11 +288,16 @@ toc
 disp(an.name);
 
 an.displayFigure = handles.fig;
-an.updateFcn = @UpdateTest;
+an.frameUpdateFcn = @UpdateTest;
 fprintf('Rendering frames to %s...\n',pwd);
-an.frameWidth = 500;
+an.frameWidth = 1200;
 % an.RenderAllFramesToo(pwd);
+set(an.displayFigure,'visible','off');
+tstart = tic;
 an.RenderAllFramesTo(pwd);
+time = toc(tstart);
+fprintf('AVG Rendering Time: %f seconds/frame\n',time/NUM_FRAMES);
+set(an.displayFigure,'visible','on');
 %fprintf('Rendering frames to %s...\n',pwd);
 %an.MakeVideoFile(pwd);
 end
@@ -446,9 +451,9 @@ fprintf('Name: %s\n',tdata.name);
 fprintf('\tTime: %f Seconds\n',tdata.time);
 fprintf('\tNumber of Frames Rendered: %f\n',tdata.numFrames);
 fprintf('\tNumber of Frames Total: %f\n',tdata.numFramesMax);
-fprintf('\tEfficiency: %f %%\n',tdata.efficiency);
+fprintf('\tEfficiency: %f %%\n',tdata.efficiency*100);
 fprintf('\tFrames/Second: %f \n',tdata.fps);
-fprintf('\tRank: %f \n',tdata.rank);
+fprintf('\tRank: %f Used Frames/Second\n',tdata.rank);
 
 end
 
