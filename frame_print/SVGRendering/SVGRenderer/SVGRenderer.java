@@ -54,13 +54,16 @@ public class SVGRenderer extends Thread
 	}
 	
 	public void SetOutputFilenames(String[] outputFilenames){
+		this.outputFilenames = new ArrayList<String>();		
 		for (String filename:outputFilenames){
 			this.outputFilenames.add(filename);
 		}
 	}
 	
 	public void SetInputFilenames(String[] inputFilenames){
+		this.inputFilenames = new ArrayList<String>();
 		for (String filename:inputFilenames){
+			System.out.printf("Adding '%s' to input files.\n",filename);			
 			this.inputFilenames.add(filename);
 		}
 	}
