@@ -28,7 +28,7 @@ if ~strcmpi(format,'SVG')
             extension = '.jpg';
         case 'PNG'
             renderer.SetOutputFormat('PNG');
-            extension = 'png';
+            extension = '.png';
         case 'TIFF'
             renderer.SetOutputFormat('TIFF');
             extension = '.tiff';
