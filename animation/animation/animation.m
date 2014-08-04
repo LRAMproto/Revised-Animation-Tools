@@ -194,6 +194,13 @@ function [frame_info, endframe] = animation(frame_gen_function,frame_info,timing
 			end
 
 			movefile(fullfile(destination{i},'newframes','fr*'),destination{i});
+            
+            % The following code allows one to keep track of where the
+            % rendered frames are. This is useful if you have a
+            % MATLAB-native batch rendering tool.
+            
+            framefiles = dir(fullfile(destination{i},'fr*'));
+            frame_info.frames = fullfile(destination{i},{framefiles.name});
 
 		end
 	end
