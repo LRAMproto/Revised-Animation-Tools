@@ -9,17 +9,32 @@ if rem(nargin,2) < 1
     error('Too many input arguments.');
 end
 
-width = DEFAULT_WIDTH;
+width = [];
+height = [];
 format = DEFAULT_FORMAT;
 num_workers = DEFAULT_NUM_WORKERS;
 destination = [];
+fig = -1;
+position = get(0,'DefaultFigurePosition');
+aspectRatio = position(3:4)/position(4);
+scaling = 1;
+interval = 1:2:length(varargin);
 
-for k=1:2:nargin-2
+for k=interval
     opt = varargin{k};
     optarg = varargin{k+1};
     switch lower(opt)
+        case 'reference figure'
+            fig = optarg;
+            oldunits = get(fig,'units');
+            set(fig,'units','pixels');
+            position = get(fig,'position');
+            set(fig,'units',oldunits);
+            aspectRatio = position(3:4)/position(4);
         case 'width'
             width = optarg;
+        case 'height'
+            height = optarg;
         case 'format'
             format = optarg;
         case 'destination'
@@ -28,6 +43,24 @@ for k=1:2:nargin-2
             num_workers = optarg;
     end
 end
+
+if isempty(width)
+    if isempty(height)
+        wh = position(4)*aspectRatio;
+        width = wh(1);
+        height = position(4);
+    else
+        width = height*apsectRatio(1);
+    end
+else
+    if isempty(height)
+        height = width/aspectRatio(1);
+    end
+end
+
+frameWidth = width*scaling;
+frameHeight = height*scaling;
+
 
 % This part handles the case in which there are more workers than rendering
 % jobs. This will not happen very often with 3>8 workers, but is worth
@@ -59,7 +92,7 @@ for i=length(svgfiles):-1:1
     end
     
     if isempty(destination);
-    destination = directory;
+        destination = directory;
     end
     
     outfiles{i} = fullfile(destination,strcat(filename,newext));
@@ -74,14 +107,14 @@ import SVGRendering.SVGRenderer.*;
 in_divs = divvy(svgfiles,num_workers);
 out_divs = divvy(outfiles,num_workers);
 
-% 
+%
 if num_workers > MAX_NUM_WORKERS
     error('Maximum number of %d workers exceeded (%d). Tests exceeding %d workers have resulted in MATLAB crashes. Use %d workers for best performance.',MAX_NUM_WORKERS,num_workers,MAX_NUM_WORKERS,DEFAULT_NUM_WORKERS);
 end
 
 if num_workers > DEFAULT_NUM_WORKERS
     warning('Note: Testing has revealed no significant improvements in performance using more than %d workers. Set number of workers to %d for the best balance between memory usage and time efficiency.',DEFAULT_NUM_WORKERS,DEFAULT_NUM_WORKERS);
-end    
+end
 
 for k=num_workers:-1:1
     % Retrieves the set of input files and output files.
@@ -90,17 +123,18 @@ for k=num_workers:-1:1
     % Creates an SVG Renderer object.
     workers{k} = SVGRenderer();
     workers{k}.SetInputFilenames(winfiles);
-    workers{k}.SetOutputFilenames(woutfiles);    
-    workers{k}.SetOutputFormat(format);   
-    workers{k}.SetWidth(width);
+    workers{k}.SetOutputFilenames(woutfiles);
+    workers{k}.SetOutputFormat(format);
+    workers{k}.SetHeight(frameHeight);
+    workers{k}.SetWidth(frameWidth);
     % starts a seperate thread of execution while allowing MATLAB to go to
     % prepare the next worker.
-    workers{k}.start();     
+    workers{k}.start();
 end
 
 for k=num_workers:-1:1
     % prevents the thread from executing until this worker is done.
-    workers{k}.join(); 
+    workers{k}.join();
     
 end
 
