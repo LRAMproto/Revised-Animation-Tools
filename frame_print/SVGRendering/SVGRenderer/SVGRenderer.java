@@ -53,17 +53,23 @@ public class SVGRenderer extends Thread
 		}		
 	}
 	
+	public void AddFile(String inputFile,String outputFile){
+		this.inputFilenames.add(inputFile);		
+		this.outputFilenames.add(outputFile);
+	}
+	
 	public void SetOutputFilenames(String[] outputFilenames){
 		this.outputFilenames = new ArrayList<String>();		
 		for (String filename:outputFilenames){
-			this.outputFilenames.add(filename);
+			//System.out.printf("Adding '%s' to output files.\n",filename);			
+ 			this.outputFilenames.add(filename);
 		}
 	}
 	
 	public void SetInputFilenames(String[] inputFilenames){
 		this.inputFilenames = new ArrayList<String>();
 		for (String filename:inputFilenames){
-			System.out.printf("Adding '%s' to input files.\n",filename);			
+			//System.out.printf("Adding '%s' to input files.\n",filename);			
 			this.inputFilenames.add(filename);
 		}
 	}
@@ -124,7 +130,19 @@ public class SVGRenderer extends Thread
 		for (int i=0; i<numWorkers; i++){
 			workers[i] = new SVGRenderer();
 			workers[i].SetWorkerNo(i);
+			workers[i].inputFilenames = new ArrayList<String>();
+			workers[i].outputFilenames = new ArrayList<String>();
+			
 		}
+		
+		int currentWorkerNo;
+		
+		for (int i=0; i<inputFiles.length; i++){
+			currentWorkerNo = i%numWorkers;
+			workers[currentWorkerNo].AddFile(inputFiles[i],outputFiles[i]);
+		}
+		
+		/*
 		int lastIdx;
 		
 		int firstToRender = 0;
@@ -134,14 +152,15 @@ public class SVGRenderer extends Thread
 
 		for (int i=0; i<numWorkers; i++){
 			
-			firstToRender = lastToRender + 1;
-			lastToRender = firstToRender + Math.min(i*filesPerWorker,numImages-1);
+			firstToRender = lastToRender + 1;			
 			numFilesToRender = Math.min(filesPerWorker,numFilesLeft);
+			lastToRender = firstToRender + numFilesToRender-1;
+			
 			String filesToRenderFrom[] = new String[numFilesToRender];
 			String filesToRenderTo[] = new String[numFilesToRender];		
-			for (int j=0; j<numFilesToRender; j++){
-				filesToRenderFrom[j] = inputFiles[firstToRender+j];
-				filesToRenderTo[j] = inputFiles[firstToRender+j];
+			for (int j=firstToRender; j<lastToRender; j++){
+				filesToRenderFrom[j] = inputFiles[j];
+				filesToRenderTo[j] = inputFiles[j];
 			}
 		
 			workers[i].SetInputFilenames(filesToRenderFrom);
@@ -149,7 +168,7 @@ public class SVGRenderer extends Thread
 			
 			numFilesLeft = numFilesLeft-numFilesToRender;
 		}
-		
+*/
 		for (SVGRenderer worker:workers){
 			worker.start();
 		}
@@ -167,7 +186,7 @@ public class SVGRenderer extends Thread
 		} else{
 			
 			for(int i=0; i<this.inputFilenames.size(); i++){
-				System.out.printf("Rendering %s from Worker %d\n",this.inputFilenames.get(i),this.workerNo);		
+				//System.out.printf("Rendering %s\n from Worker %d\n to %s\n",this.inputFilenames.get(i),this.workerNo,this.outputFilenames.get(i));		
 				this.RenderImage(this.inputFilenames.get(i),this.outputFilenames.get(i));			
 			}
 		}
@@ -213,9 +232,12 @@ public class SVGRenderer extends Thread
 	public void run(){
 		try{
 			this.RenderImageBatch();
+		} catch (NullPointerException n){
+			System.out.println("Cannot find pointer.\n");
 		} catch (Exception e){
 			// Do Nothing
 			System.out.println("Something went wrong.");
+			System.out.println(e.getMessage());			
 		}
 	}	
 	
