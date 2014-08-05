@@ -15,7 +15,7 @@ public class SVGRenderer extends Thread
 	// Width
 	public int width = 1024;
 	// Height
-	public int height;
+	public int height = 768;
 	// Output Format
 	public String outputFormat = "JPEG";
 	
@@ -101,6 +101,15 @@ public class SVGRenderer extends Thread
 			throw new IllegalArgumentException("Width must be greater than 0.\n");		
 		}
 	}
+
+	public void SetHeight(int val)
+	{
+		if (val > 0){
+			this.height = val;
+		} else{
+			throw new IllegalArgumentException("Height must be greater than 0.\n");		
+		}
+	}	
 	
 	public void SetWorkerNo(int workerNo){
 		this.workerNo = workerNo;
@@ -207,15 +216,21 @@ public class SVGRenderer extends Thread
 			this.transcoder.addTranscodingHint(JPEGTranscoder.KEY_QUALITY,
 											   new Float(1));
 			this.transcoder.addTranscodingHint(JPEGTranscoder.KEY_WIDTH,
-											   new Float(this.width));			
+											   new Float(this.width));
+			this.transcoder.addTranscodingHint(JPEGTranscoder.KEY_HEIGHT,
+											   new Float(this.height));					
 			
 		} else if (this.outputFormat.equals("PNG")){
 			this.transcoder.addTranscodingHint(PNGTranscoder.KEY_WIDTH,
-											   new Float(this.width));							
+											   new Float(this.width));
+			this.transcoder.addTranscodingHint(PNGTranscoder.KEY_HEIGHT,
+											   new Float(this.height));					
 			
 		} else if (this.outputFormat.equals("TIFF")){
 			this.transcoder.addTranscodingHint(TIFFTranscoder.KEY_WIDTH,
-											   new Float(this.width));			
+											   new Float(this.width));
+			this.transcoder.addTranscodingHint(PNGTranscoder.KEY_HEIGHT,
+											   new Float(this.height));					
 		} else{
 			throw new IllegalArgumentException("Invalid Output Format - use SetOutputFormat.\n");			
 		} 
