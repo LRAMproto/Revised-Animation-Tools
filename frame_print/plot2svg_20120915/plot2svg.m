@@ -2686,7 +2686,7 @@ if isempty(tex)
 end
 if exponent
     tex=sprintf('10<tspan font-size="%0.1fpt" dy="%0.1fpt">%s</tspan>', 0.7*textfontsize, -0.7*textfontsize, tex);
-    shift = shift + 0.4*fontsize;   % Small correction to make it look nicer
+    %shift = shift + 0.4*fontsize;   % Small correction to make it look nicer
 end
 % Note: Obviously, Matlab is using font sizes that are rounded to decimal
 % pt sizes. This may cause problems for very small figures. But we have to
