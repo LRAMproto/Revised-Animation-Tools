@@ -2265,6 +2265,11 @@ end
 % create a line segment
 % this algorthm was optimized for large segement counts
 function line2svg(fid, group, axpos, x, y, scolorname, style, width)
+if (isempty(x) && isempty(y))
+	% Handles the issue of a line drawn with an empty set of points.
+	x = [0;0];
+	y = [0;0];
+end
 if ~strcmp(style,'none')
     pattern = lineStyle2svg(style, width);
     if (isnan(x) == zeros(size(x)) & isnan(y) == zeros(size(y)))
