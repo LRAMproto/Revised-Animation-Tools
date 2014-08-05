@@ -40,12 +40,24 @@ function animation_demonstration(export,skip)
 
 	% Declare a directory name in which to place files
 	destination = 'demonstration_movie_1';
-	tic
+	anstart = tic();
 	% Animate the movie
 	[frame_info, endframe]...
 		= animation(frame_gen_function,frame_info,timing,destination,export(1),skip(1));
     
-    toc;
+    % Timing Tests for frame_print
+    
+	svgfinish = toc(anstart);
+    pngstart = tic();
+    fmt = 'jpeg';
+    render_batch_svg(frame_info.frames,'format',fmt,'width',400,'num_workers',3);
+    pngfinish = toc(pngstart);
+    anfinish = toc(anstart);
+    
+    fprintf('Time to render total animation: %.3f seconds.\n',anfinish);
+    fprintf('Time to render SVG images: %.3f seconds.\n',svgfinish);
+    fprintf('Time to render %s images: %.3f seconds.\n',fmt, pngfinish);
+    
 	%%%%%%%%%%%%%%%%
 	% Second movie: Zoom in on first quadrant
 	
@@ -70,7 +82,6 @@ function animation_demonstration(export,skip)
     
 	% Animte the movie
 	[frame_info, endframe] = animation(frame_gen_function,frame_info,timing,destination,export(2),skip(2),endframe);
-	disp(frame_info);
    
 end
 
@@ -122,7 +133,7 @@ function frame_info = animation_demo_draw_cosine(frame_info,tau)
 	% frame_info.f, using the Painters renderer)
 	frame_info.printmethod = @(dest) print(frame_info.f,'-dpng','-r 150','-painters',dest);
     %tests with custom print method
-    frame_info.printmethod = @(dest)frame_print(frame_info.f,dest,'PNG', 1200);    	
+    frame_info.printmethod = @(dest)frame_print(frame_info.f,dest,'SVG', 1200);    	
 
 end
 
