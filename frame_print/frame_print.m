@@ -2,9 +2,9 @@ function frame_print(fig, varargin)
 
 % Wrapper function for a specialized PRINT command.
 oldunits = get(fig,'units');
-position = get(fig,'position');
 set(fig,'units','pixels');
-
+position = get(fig,'position');
+set(fig,'units',oldunits);
 format = 'SVG';
 
 width = [];
