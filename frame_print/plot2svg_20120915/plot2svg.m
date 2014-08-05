@@ -104,7 +104,9 @@ function varargout = plot2svg(param1,id,pixelfiletype)
 %             - Fix for another axis label problem (thanks to Ben Mitch)
 %  15-09-2012 - Fix for linestyle none of rectangles (thanks to Andrew)
 %             - Enabled scatter plot functionality
-
+text_decendants = findobj(id,'type',text);
+oldfontunits = get(text_decendants,'FontUnits');
+set(text_decendants,'FontUnits','Pixels');
 global PLOT2SVG_globals
 global colorname
 progversion='15-Sep-2012';
@@ -306,6 +308,7 @@ if PLOT2SVG_globals.checkUserData && isstruct(get(id,'UserData'))
             end
         end
     end
+    set(text_decendants,'FontUnits',oldfontunits);
 end
 
 
