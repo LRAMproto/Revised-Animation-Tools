@@ -1,4 +1,5 @@
 function outfiles = render_batch_svg(svgfiles, varargin)
+
 % Renders a list of SVG images as a batch job.
 DEFAULT_WIDTH = 400;
 MAX_NUM_WORKERS = 8;
@@ -11,7 +12,7 @@ end
 
 width = [];
 height = [];
-format = DEFAULT_FORMAT;
+fmt = DEFAULT_FORMAT;
 num_workers = DEFAULT_NUM_WORKERS;
 destination = [];
 fig = -1;
@@ -36,13 +37,21 @@ for k=interval
         case 'height'
             height = optarg;
         case 'format'
-            format = optarg;
+            fmt = optarg;
         case 'destination'
             destination = optarg;
         case 'num_workers'
             num_workers = optarg;
+        case 'keep original'
+            if optarg == false
+                keepOriginal = false;
+            else
+                keepOriginal = true;
+            end
     end
 end
+
+% handles case in which height or or width is unset.
 
 if isempty(width)
     if isempty(height)
@@ -58,6 +67,7 @@ else
     end
 end
 
+% sets frame width and height.
 frameWidth = width*scaling;
 frameHeight = height*scaling;
 
@@ -70,7 +80,7 @@ num_workers = min(length(svgfiles),num_workers);
 
 % Verification
 
-switch upper(format)
+switch upper(fmt)
     case 'PNG'
         newext = '.png';
     case 'JPG'
@@ -80,7 +90,7 @@ switch upper(format)
     case 'TIFF'
         newext = '.tiff';
     otherwise
-        error('Output format "%s" not recognized.',format);
+        error('Output format "%s" not recognized.',fmt);
 end
 
 outfiles{length(svgfiles)} = [];
@@ -98,9 +108,6 @@ for i=length(svgfiles):-1:1
     outfiles{i} = fullfile(destination,strcat(filename,newext));
 end
 
-% Imports the SVG Renderer.
-import SVGRendering.SVGRenderer.*;
-
 % Uses a special function to distribute a set of input and output files
 % between all workers.
 
@@ -115,16 +122,23 @@ end
 if num_workers > DEFAULT_NUM_WORKERS
     warning('Note: Testing has revealed no significant improvements in performance using more than %d workers. Set number of workers to %d for the best balance between memory usage and time efficiency.',DEFAULT_NUM_WORKERS,DEFAULT_NUM_WORKERS);
 end
+    frame_print_setup();   
+
+% Imports the SVG Renderer.
+import SVGRendering.SVGRenderer.*;    
+    if ~exist('SVGRendering.SVGRenderer.SVGRenderer','class') && ~strcmpi(fmt, 'SVG');
+        error('SVG Renderer cannot be found. Try running this again.')
+    end
 
 for k=num_workers:-1:1
     % Retrieves the set of input files and output files.
     winfiles = in_divs{k};
     woutfiles = out_divs{k};
     % Creates an SVG Renderer object.
-    workers{k} = SVGRenderer();
+    workers{k} = SVGRendering.SVGRenderer.SVGRenderer();
     workers{k}.SetInputFilenames(winfiles);
     workers{k}.SetOutputFilenames(woutfiles);
-    workers{k}.SetOutputFormat(format);
+    workers{k}.SetOutputFormat(fmt);
     workers{k}.SetHeight(frameHeight);
     workers{k}.SetWidth(frameWidth);
     % starts a seperate thread of execution while allowing MATLAB to go to
@@ -137,12 +151,10 @@ for k=num_workers:-1:1
     workers{k}.join();
     
 end
-
-
-% renderer = SVGRenderer();
-% renderer.SetMaxNumWorkers(num_workers);
-% renderer.SetOutputFormat(format);
-% renderer.RenderImages(svgfiles, outfiles);
-
+if keepOriginal == false
+for k = 1:length(svgfiles)
+delete(svgfiles{k});
+end
+end
 end
 
