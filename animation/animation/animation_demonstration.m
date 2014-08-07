@@ -130,6 +130,7 @@ set(h.ax,'Xlim',[0 2*pi],'Ylim',[-1 1]*1.1);   % Set the range of the plot
 set(h.ax,'Xtick',0:1:6,'YTick',[-1 0 1]*.5);   % Set the tick locations
 set(h.ax,'FontUnits','pixels');
 set(h.ax,'FontSize',10);                       % Set the axis font size
+set(h.ax,'Units','pixels')
 xlabel(h.ax, 'x')							 % Label the axes
 ylabel(h.ax, 'y')
 set(h.ax,'Box','on')						 % put box all the way around the axes
