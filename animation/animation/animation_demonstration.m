@@ -46,11 +46,13 @@ destination = 'demonstration_movie_1';
     = animation(frame_gen_function,frame_info,timing,destination,export(1),skip(1));
 
 % Using batch rendering of frame print SVG frames.
+if export(1)
 if isfield(frame_info,'frames')
     if ~isempty(frame_info.frames)
     fmt = 'jpeg';
     outfiles = render_batch_svg(frame_info.frames,'format',fmt,'reference figure',frame_info.f,'num_workers',3);
     end
+end
 end
 if nargin > 2
     
@@ -91,11 +93,13 @@ destination = 'demonstration_movie_2';
 [frame_info, endframe] = animation(frame_gen_function,frame_info,timing,destination,export(2),skip(2),endframe);
 
 % Using batch rendering of frame print SVG frames.
+if export(2)
 if isfield(frame_info,'frames')
     if ~isempty(frame_info.frames)
     fmt = 'png';
     outfiles = render_batch_svg(frame_info.frames,'format',fmt,'reference figure',frame_info.f,'num_workers',3, 'width', 1200);
     end
+end
 end
 if nargin > 2
     if exportVideo(2) == 1
