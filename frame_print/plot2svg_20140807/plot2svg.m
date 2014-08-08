@@ -104,6 +104,11 @@ function varargout = plot2svg(param1,id,pixelfiletype)
 %             - Fix for another axis label problem (thanks to Ben Mitch)
 %  15-09-2012 - Fix for linestyle none of rectangles (thanks to Andrew)
 %             - Enabled scatter plot functionality
+%  07-08-2014 - Modified line drawing to handle lines with no points; (thanks to David Rebhuhn)
+%             - Disabled output messages for batch processing.
+%             - Fixed a middle alignment rendering issue for OSX. Apparently,
+%             - The 'middle' alignment tag doesn't display correctly, but 'start'
+%             - does.
 text_decendants = findobj(id,'type',text);
 oldfontunits = get(text_decendants,'FontUnits');
 set(text_decendants,'FontUnits','Pixels');
@@ -2555,7 +2560,7 @@ end
 switch lower(align)
     case 'right', anchor = 'end'; 
     case 'center'
-    anchor = 'start';
+    if ismac, anchor = 'start'; else, anchor = 'middle'; end; % for some reason, the middle anchor tag doesn't work properly in an OSX environment, but the start anchor seems to do the trick. 
     otherwise,anchor = 'start';
 end
 if iscellstr(tex)
