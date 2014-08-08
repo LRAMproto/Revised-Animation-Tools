@@ -20,6 +20,7 @@ position = get(0,'DefaultFigurePosition');
 aspectRatio = position(3:4)/position(4);
 scaling = 1;
 interval = 1:2:length(varargin);
+keepOriginal = true;
 
 for k=interval
     opt = varargin{k};

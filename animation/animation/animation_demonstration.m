@@ -49,7 +49,7 @@ destination = 'demonstration_movie_1';
 if isfield(frame_info,'frames')
     if ~isempty(frame_info.frames)
     fmt = 'jpeg';
-    outfiles = render_batch_svg(frame_info.frames,'format',fmt,'reference figure',frame_info.f,'num_workers',3, 'keep original',false);
+    outfiles = render_batch_svg(frame_info.frames,'format',fmt,'reference figure',frame_info.f,'num_workers',3);
     end
 end
 if nargin > 2
@@ -94,7 +94,7 @@ destination = 'demonstration_movie_2';
 if isfield(frame_info,'frames')
     if ~isempty(frame_info.frames)
     fmt = 'png';
-    outfiles = render_batch_svg(frame_info.frames,'format',fmt,'reference figure',frame_info.f,'num_workers',3, 'keep original',false, 'width', 1200);
+    outfiles = render_batch_svg(frame_info.frames,'format',fmt,'reference figure',frame_info.f,'num_workers',3, 'width', 1200);
     end
 end
 if nargin > 2

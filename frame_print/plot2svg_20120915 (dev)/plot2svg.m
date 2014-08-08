@@ -2505,6 +2505,7 @@ end
 % former versions of FrameMaker supported the commands FDY and FDX to shift the text
 % this commands were replaced by a shift parameter that is normed by the font size
 function label2svg(fid,group,axpos,id,x,y,tex,align,angle,valign,lines,paperpos,font_color,exponent)
+hAnchOffset = 0;
 if isempty(tex)
     return;
 end
@@ -2553,7 +2554,8 @@ switch lower(valign)
 end
 switch lower(align)
     case 'right', anchor = 'end'; 
-    case 'center',anchor = 'middle';
+    case 'center'
+    anchor = 'start';
     otherwise,anchor = 'start';
 end
 if iscellstr(tex)
